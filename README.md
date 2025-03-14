@@ -79,7 +79,7 @@ The user interface is built with Streamlit, providing an intuitive way to intera
 
 2. Create and activate a conda environment:
    ```
-   conda create -n rag_chatbot python=3.9
+   conda env create -f environment.yml
    conda activate rag_chatbot
    ```
 

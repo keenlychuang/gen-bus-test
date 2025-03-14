@@ -1,0 +1,17 @@
+name: rag_chatbot
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip=22.3.1
+  - pip:
+    - openai
+    - langchain
+    - langchain-openai
+    - langchain-community
+    - streamlit
+    - chromadb
+    - docx2txt
+    - jupyter
+    - notebook
