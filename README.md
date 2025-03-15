@@ -213,12 +213,11 @@ While the RAG chatbot is powerful, it has some limitations to be aware of:
 
 Potential enhancements for future versions:
 
-- Support for more document formats (e.g., HTML, Markdown)
+- Support for more document formats (e.g., HTML, Markdown, CSV, TXT)
+- OCR, captioning for images and images within documents
 - Integration with additional language models beyond OpenAI
 - Improved handling of tables and structured data from Excel files
 - Document preprocessing options (e.g., OCR for scanned documents)
-- Multi-user support with authentication
-- Persistent chat history across sessions
 
 ## License
 

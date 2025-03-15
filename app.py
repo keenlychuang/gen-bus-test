@@ -1,12 +1,19 @@
 """
 Streamlit UI for RAG Chatbot
-Provides a user-friendly interface for interacting with the RAG chatbot.
+Provides a user-friendly interface with custom warm color theme.
 """
 
 import os
 import tempfile
 import streamlit as st
 from rag_chatbot import RAGChatbot
+from styles import (
+    apply_theme, 
+    get_light_about_html, get_dark_about_html,
+    get_light_chat_header_html, get_dark_chat_header_html,
+    get_light_config_header_html, get_dark_config_header_html,
+    get_light_upload_header_html, get_dark_upload_header_html
+)
 
 # Set page configuration
 st.set_page_config(
@@ -24,6 +31,12 @@ if "chatbot" not in st.session_state:
 
 if "documents_loaded" not in st.session_state:
     st.session_state.documents_loaded = False
+    
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+
+# Apply current theme
+apply_theme(st.session_state.dark_mode)
 
 # Function to initialize the chatbot
 def initialize_chatbot():
@@ -72,9 +85,26 @@ This chatbot uses Retrieval-Augmented Generation (RAG) to answer questions based
 Upload PDF, Word, or Excel files, then ask questions about their content.
 """)
 
+# Custom container for chat area
+chat_container = st.container()
+if st.session_state.dark_mode:
+    chat_container.markdown(get_dark_chat_header_html(), unsafe_allow_html=True)
+else:
+    chat_container.markdown(get_light_chat_header_html(), unsafe_allow_html=True)
+
 # Sidebar for API key and file upload
 with st.sidebar:
-    st.header("Configuration")
+    # Theme toggle at the top of sidebar
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        if st.session_state.dark_mode:
+            st.markdown(get_dark_config_header_html(), unsafe_allow_html=True)
+        else:
+            st.markdown(get_light_config_header_html(), unsafe_allow_html=True)
+    with col2:
+        if st.button("🌙" if not st.session_state.dark_mode else "☀️"):
+            st.session_state.dark_mode = not st.session_state.dark_mode
+            st.rerun()
     
     # OpenAI API key input
     openai_api_key = st.text_input(
@@ -93,7 +123,11 @@ with st.sidebar:
     st.divider()
     
     # File uploader
-    st.header("Upload Documents")
+    if st.session_state.dark_mode:
+        st.markdown(get_dark_upload_header_html(), unsafe_allow_html=True)
+    else:
+        st.markdown(get_light_upload_header_html(), unsafe_allow_html=True)
+        
     uploaded_files = st.file_uploader(
         "Upload PDF, Word, or Excel files",
         type=["pdf", "docx", "xlsx", "xls"],
@@ -126,16 +160,10 @@ with st.sidebar:
     st.divider()
     
     # App info
-    st.markdown("""
-    ### About
-    This RAG Chatbot uses:
-    - LangChain for document processing
-    - ChromaDB for vector storage
-    - OpenAI API for question answering
-    """)
-
-# Chat interface
-st.header("Chat with your Documents")
+    if st.session_state.dark_mode:
+        st.markdown(get_dark_about_html(), unsafe_allow_html=True)
+    else:
+        st.markdown(get_light_about_html(), unsafe_allow_html=True)
 
 # Display chat messages
 for message in st.session_state.messages:
