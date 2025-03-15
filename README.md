@@ -1,6 +1,6 @@
-# gen-bus-test
-Manus one-shot generated repository for RAG document processing
 # RAG Chatbot for Document Processing
+
+Manus one-shot generated repository for RAG document processing
 
 A lightweight Retrieval-Augmented Generation (RAG) chatbot for processing and querying Word documents, Excel files, and PDFs using Python 3.9, OpenAI API, LangChain, and Chroma.
 
@@ -36,6 +36,7 @@ The system is built with a modular architecture consisting of the following comp
 ### Document Processing Module
 
 The document processing module is responsible for extracting text from different file formats and splitting it into manageable chunks. It uses LangChain document loaders for each file type:
+
 - PyPDFLoader for PDF documents
 - Docx2txtLoader for Word documents
 - UnstructuredExcelLoader for Excel spreadsheets
@@ -49,6 +50,7 @@ The vector database module uses Chroma to store and retrieve document embeddings
 ### RAG Chatbot Core
 
 The core chatbot module integrates the document processor and vector database with OpenAI's language models. It implements a retrieval-augmented generation pipeline that:
+
 1. Retrieves relevant document chunks based on the user's question
 2. Constructs a prompt with the retrieved context
 3. Generates an answer using OpenAI's language models
@@ -56,6 +58,7 @@ The core chatbot module integrates the document processor and vector database wi
 ### Streamlit UI
 
 The user interface is built with Streamlit, providing an intuitive way to interact with the chatbot. Users can:
+
 - Enter their OpenAI API key
 - Upload documents in various formats
 - Ask questions about the uploaded documents
@@ -72,26 +75,31 @@ The user interface is built with Streamlit, providing an intuitive way to intera
 ### Setup
 
 1. Clone this repository:
-   ```
+
+   ```bash
    git clone https://github.com/yourusername/rag-chatbot.git
    cd rag-chatbot
    ```
 
 2. Create and activate a conda environment:
-   ```
+
+   ```bash
    conda env create -f environment.yml
    conda activate rag_chatbot
    ```
 
 3. Install the required dependencies:
-   ```
+
+   ```bash
    pip install openai langchain langchain-openai langchain-community streamlit chromadb docx2txt jupyter notebook
    ```
 
 4. Set up your OpenAI API key:
-   ```
+
+   ```bash
    export OPENAI_API_KEY="your-openai-api-key"
    ```
+
    Alternatively, you can provide your API key directly in the Streamlit interface.
 
 ## Usage
@@ -100,17 +108,18 @@ The user interface is built with Streamlit, providing an intuitive way to intera
 
 To launch the Streamlit interface, run:
 
-```
+```bash
 python run_app.py
 ```
 
 Or directly with Streamlit:
 
-```
+```bash
 streamlit run app.py
 ```
 
 This will start the web interface where you can:
+
 1. Enter your OpenAI API key
 2. Initialize the chatbot
 3. Upload documents (PDF, Word, Excel)
@@ -121,11 +130,12 @@ This will start the web interface where you can:
 
 The project includes a comprehensive demo notebook that walks through all the functionality:
 
-```
+```bash
 jupyter notebook demo_notebook.ipynb
 ```
 
 The notebook demonstrates:
+
 - Setting up the environment
 - Processing sample documents
 - Using the vector database
@@ -214,10 +224,10 @@ While the RAG chatbot is powerful, it has some limitations to be aware of:
 Potential enhancements for future versions:
 
 - Support for more document formats (e.g., HTML, Markdown, CSV, TXT)
-- OCR, captioning for images and images within documents
+- Support for OCR, captioning for images and images within documents
+- Support for ipynb tutorials
 - Integration with additional language models beyond OpenAI
 - Improved handling of tables and structured data from Excel files
-- Document preprocessing options (e.g., OCR for scanned documents)
 
 ## License
 
@@ -235,4 +245,3 @@ This project leverages several powerful open-source libraries:
 ## Contact
 
 For questions or feedback, please open an issue on the GitHub repository or contact the project maintainer.
-
