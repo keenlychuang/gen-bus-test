@@ -97,7 +97,7 @@ class RAGChatbot:
         Args:
             file_paths: List of file paths to process
             directory_path: Directory path containing documents to process
-            
+                
         Returns:
             Number of documents loaded
         """
@@ -121,21 +121,22 @@ class RAGChatbot:
                 except Exception as e:
                     print(f"Error processing {file_path}: {str(e)}")
         
-        # Process all files in directory
+        # Process all files in directory and subdirectories
         if directory_path:
             try:
                 processed_files = self.document_processor.process_directory(directory_path)
                 
-                for file_name, chunks in processed_files.items():
-                    file_path = os.path.join(directory_path, file_name)
+                for rel_path, chunks in processed_files.items():
+                    # Construct full file path
+                    file_path = os.path.join(directory_path, rel_path)
                     
                     # Create metadata for each chunk
-                    file_metadatas = [{"source": file_name, "file_path": file_path} for _ in chunks]
+                    file_metadatas = [{"source": rel_path, "file_path": file_path} for _ in chunks]
                     
                     processed_chunks.extend(chunks)
                     metadatas.extend(file_metadatas)
                     
-                    print(f"Processed {file_name}: {len(chunks)} chunks extracted")
+                    print(f"Processed {rel_path}: {len(chunks)} chunks extracted")
             except Exception as e:
                 print(f"Error processing directory {directory_path}: {str(e)}")
         

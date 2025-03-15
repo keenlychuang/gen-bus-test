@@ -1,19 +1,12 @@
 """
 Streamlit UI for RAG Chatbot
-Provides a user-friendly interface with custom warm color theme.
+Provides a user-friendly interface with custom styling.
 """
 
 import os
 import tempfile
 import streamlit as st
 from rag_chatbot import RAGChatbot
-from styles import (
-    apply_theme, 
-    get_light_about_html, get_dark_about_html,
-    get_light_chat_header_html, get_dark_chat_header_html,
-    get_light_config_header_html, get_dark_config_header_html,
-    get_light_upload_header_html, get_dark_upload_header_html
-)
 
 # Set page configuration
 st.set_page_config(
@@ -21,6 +14,103 @@ st.set_page_config(
     page_icon="🤖",
     layout="wide"
 )
+
+# CSS for styling
+def get_css():
+    return """
+    <style>
+        /* Main background and text colors */
+        .stApp {
+            background-color: #F5F5DC; /* Beige background */
+            color: #000000; /* Black text */
+        }
+        
+        /* Sidebar styling */
+        .css-1d391kg, .css-12oz5g7 {
+            background-color: #D2B48C; /* Tan/taupe sidebar */
+        }
+        
+        /* Chat message containers */
+        .stChatMessage {
+            background-color: #FFF8DC; /* Cream color for messages */
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        /* User messages */
+        .stChatMessage[data-testid="user-message"] {
+            background-color: #E8DFD8; /* Light taupe for user messages */
+        }
+        
+        /* Assistant messages */
+        .stChatMessage[data-testid="assistant-message"] {
+            background-color: #F9F6F0; /* Lighter cream for assistant */
+        }
+        
+        /* Input fields */
+        .stTextInput input, .stFileUploader label {
+            background-color: #FFF8E7; /* Very light cream */
+            border: 1px solid #D2B48C; /* Taupe border */
+        }
+        
+        /* Buttons */
+        .stButton button {
+            background-color: #C8B39C; /* Muted taupe */
+            color: black;
+            border: none;
+        }
+        
+        .stButton button:hover {
+            background-color: #B49B7F; /* Darker taupe on hover */
+        }
+        
+        /* Headers */
+        h1, h2, h3 {
+            color: #6D5B4B; /* Dark taupe for headers */
+        }
+        
+        /* Code blocks with syntax highlighting */
+        code {
+            background-color: #F2EBE3; /* Light beige for code */
+            border: 1px solid #E0D5C5; /* Subtle border */
+        }
+        
+        pre {
+            background-color: #F2EBE3; /* Light beige for code blocks */
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #E0D5C5;
+        }
+    </style>
+    """
+
+# HTML components
+def get_about_html():
+    return """
+    <div style="background-color: #F7F3EB; padding: 15px; border-radius: 8px; border: 1px solid #D2B48C;">
+        <h3 style="color: #6D5B4B;">About</h3>
+        <p>This RAG Chatbot uses:</p>
+        <ul>
+            <li>LangChain for document processing</li>
+            <li>ChromaDB for vector storage</li>
+            <li>OpenAI API for question answering</li>
+        </ul>
+    </div>
+    """
+
+def get_chat_header_html():
+    return """
+    <div style="background-color: #F7F3EB; padding: 20px; border-radius: 10px; border: 1px solid #D2B48C;">
+        <h2 style="color: #6D5B4B;">Chat with your Documents</h2>
+    </div>
+    """
+
+def get_config_header_html():
+    return '<h3 style="color: #6D5B4B;">Configuration</h3>'
+
+def get_upload_header_html():
+    return '<h3 style="color: #6D5B4B;">Upload Documents</h3>'
 
 # Initialize session state variables
 if "messages" not in st.session_state:
@@ -31,12 +121,9 @@ if "chatbot" not in st.session_state:
 
 if "documents_loaded" not in st.session_state:
     st.session_state.documents_loaded = False
-    
-if "dark_mode" not in st.session_state:
-    st.session_state.dark_mode = False
 
-# Apply current theme
-apply_theme(st.session_state.dark_mode)
+# Apply CSS styling
+st.markdown(get_css(), unsafe_allow_html=True)
 
 # Function to initialize the chatbot
 def initialize_chatbot():
@@ -87,24 +174,12 @@ Upload PDF, Word, or Excel files, then ask questions about their content.
 
 # Custom container for chat area
 chat_container = st.container()
-if st.session_state.dark_mode:
-    chat_container.markdown(get_dark_chat_header_html(), unsafe_allow_html=True)
-else:
-    chat_container.markdown(get_light_chat_header_html(), unsafe_allow_html=True)
+chat_container.markdown(get_chat_header_html(), unsafe_allow_html=True)
 
 # Sidebar for API key and file upload
 with st.sidebar:
-    # Theme toggle at the top of sidebar
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        if st.session_state.dark_mode:
-            st.markdown(get_dark_config_header_html(), unsafe_allow_html=True)
-        else:
-            st.markdown(get_light_config_header_html(), unsafe_allow_html=True)
-    with col2:
-        if st.button("🌙" if not st.session_state.dark_mode else "☀️"):
-            st.session_state.dark_mode = not st.session_state.dark_mode
-            st.rerun()
+    # Configuration header
+    st.markdown(get_config_header_html(), unsafe_allow_html=True)
     
     # OpenAI API key input
     openai_api_key = st.text_input(
@@ -123,10 +198,7 @@ with st.sidebar:
     st.divider()
     
     # File uploader
-    if st.session_state.dark_mode:
-        st.markdown(get_dark_upload_header_html(), unsafe_allow_html=True)
-    else:
-        st.markdown(get_light_upload_header_html(), unsafe_allow_html=True)
+    st.markdown(get_upload_header_html(), unsafe_allow_html=True)
         
     uploaded_files = st.file_uploader(
         "Upload PDF, Word, or Excel files",
@@ -160,10 +232,7 @@ with st.sidebar:
     st.divider()
     
     # App info
-    if st.session_state.dark_mode:
-        st.markdown(get_dark_about_html(), unsafe_allow_html=True)
-    else:
-        st.markdown(get_light_about_html(), unsafe_allow_html=True)
+    st.markdown(get_about_html(), unsafe_allow_html=True)
 
 # Display chat messages
 for message in st.session_state.messages:

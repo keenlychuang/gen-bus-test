@@ -74,13 +74,13 @@ class DocumentProcessor:
     
     def process_directory(self, directory_path: str) -> Dict[str, List[str]]:
         """
-        Process all supported documents in a directory.
+        Process all supported documents in a directory and its subdirectories.
         
         Args:
             directory_path: Path to the directory containing documents
-            
+                
         Returns:
-            Dictionary mapping file names to their chunked text content
+            Dictionary mapping file paths to their chunked text content
         """
         if not os.path.isdir(directory_path):
             raise NotADirectoryError(f"Directory not found: {directory_path}")
@@ -88,15 +88,20 @@ class DocumentProcessor:
         processed_files = {}
         supported_extensions = ['.pdf', '.docx', '.xlsx', '.xls']
         
-        for filename in os.listdir(directory_path):
-            file_path = os.path.join(directory_path, filename)
-            if os.path.isfile(file_path):
+        # Walk through directory and all subdirectories
+        for root, _, files in os.walk(directory_path):
+            for filename in files:
                 ext = os.path.splitext(filename)[1].lower()
                 if ext in supported_extensions:
+                    # Construct the full file path
+                    file_path = os.path.join(root, filename)
                     try:
-                        processed_files[filename] = self.process_file(file_path)
+                        # Get relative path from the base directory to use as key
+                        rel_path = os.path.relpath(file_path, directory_path)
+                        processed_files[rel_path] = self.process_file(file_path)
+                        print(f"Processed {rel_path}")
                     except Exception as e:
-                        print(f"Error processing {filename}: {str(e)}")
+                        print(f"Error processing {file_path}: {str(e)}")
         
         return processed_files
     

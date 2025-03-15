@@ -88,13 +88,7 @@ The user interface is built with Streamlit, providing an intuitive way to intera
    conda activate rag_chatbot
    ```
 
-3. Install the required dependencies:
-
-   ```bash
-   pip install openai langchain langchain-openai langchain-community streamlit chromadb docx2txt jupyter notebook
-   ```
-
-4. Set up your OpenAI API key:
+3. Set up your OpenAI API key:
 
    ```bash
    export OPENAI_API_KEY="your-openai-api-key"
