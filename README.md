@@ -4,7 +4,7 @@
 
 # Document Base Unified Search and Extraction (DBUSE)
 
-A lightweight Retrieval-Augmented Generation (RAG) chatbot for processing and querying Word documents, Excel files, and PDFs using Python 3.9, OpenAI API, LangChain, and Chroma.
+A lightweight Retrieval-Augmented Generation (RAG) chatbot for processing and querying Word documents, Excel files, and PDFs using Python 3.9, OpenAI API, LangChain, and Chroma. Pronounced “DEH-byew-see”
 
 ## Overview
 
@@ -222,7 +222,8 @@ Potential enhancements for future versions:
 - Support for more document formats (e.g., HTML, Markdown, CSV, TXT)
 - Support for OCR, captioning for images and images within documents
 - Support for ipynb tutorials
-- Integration with additional language models beyond OpenAI
+- Integration with additional language models beyond OpenAI, like Claude
+   - Claude DBUSE has a nice ring to it
 - Improved handling of tables and structured data from Excel files
 
 ## License
