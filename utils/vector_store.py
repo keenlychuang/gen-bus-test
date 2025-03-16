@@ -7,9 +7,9 @@ import os
 from typing import List, Dict, Any, Optional
 import uuid
 
-# LangChain components
+# Updated imports for LangChain
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma  # Changed from langchain_community.vectorstores
 from langchain_core.documents import Document
 
 
@@ -17,6 +17,8 @@ class VectorStore:
     """
     A class for managing document embeddings using ChromaDB as the vector database.
     """
+
+    DEFAULT_RESULTS_NUM = 6
     
     def __init__(self, 
                  persist_directory: str = "./chroma_db",
@@ -76,8 +78,7 @@ class VectorStore:
             ids=ids
         )
         
-        # Persist the vector store to disk
-        self.vector_store.persist()
+        # Note: Removed .persist() call as it's no longer needed in Chroma 0.4.x+
         
         return ids
     
@@ -94,12 +95,11 @@ class VectorStore:
         # Add documents to vector store
         ids = self.vector_store.add_documents(documents)
         
-        # Persist the vector store to disk
-        self.vector_store.persist()
+        # Note: Removed .persist() call as it's no longer needed in Chroma 0.4.x+
         
         return ids
     
-    def similarity_search(self, query: str, k: int = 4) -> List[Document]:
+    def similarity_search(self, query: str, k: int = DEFAULT_RESULTS_NUM) -> List[Document]:
         """
         Perform similarity search for a query.
         
@@ -112,7 +112,7 @@ class VectorStore:
         """
         return self.vector_store.similarity_search(query, k=k)
     
-    def similarity_search_with_score(self, query: str, k: int = 4) -> List[tuple[Document, float]]:
+    def similarity_search_with_score(self, query: str, k: int = DEFAULT_RESULTS_NUM) -> List[tuple[Document, float]]:
         """
         Perform similarity search with relevance scores.
         
@@ -135,7 +135,7 @@ class VectorStore:
         Returns:
             A retriever that can be used in a RetrievalQA chain
         """
-        search_kwargs = search_kwargs or {"k": 4}
+        search_kwargs = search_kwargs or {"k": DEFAULT_RESULTS_NUM}
         return self.vector_store.as_retriever(search_kwargs=search_kwargs)
     
     def clear(self):
@@ -147,7 +147,7 @@ class VectorStore:
             persist_directory=self.persist_directory,
             embedding_function=self.embeddings
         )
-        self.vector_store.persist()
+        # Note: Removed .persist() call as it's no longer needed in Chroma 0.4.x+
 
 
 # Example usage
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     print(f"Added {len(ids)} documents to vector store.")
     
     # Perform similarity search
-    results = vector_store.similarity_search("What is AI?", k=2)
+    results = vector_store.similarity_search("What is Langchain?", k=2)
     for doc in results:
         print(f"Content: {doc.page_content}")
         print(f"Metadata: {doc.metadata}")

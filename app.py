@@ -12,7 +12,7 @@ from rag_chatbot import RAGChatbot
 st.set_page_config(
     page_title="RAG Chatbot",
     page_icon="🤖",
-    layout="wide"
+    layout="centered"
 )
 
 # CSS for styling

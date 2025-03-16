@@ -27,7 +27,7 @@ class RAGChatbot:
     def __init__(self, 
                  persist_directory: str = "./chroma_db",
                  openai_api_key: Optional[str] = None,
-                 model_name: str = "gpt-3.5-turbo",
+                 model_name: str = "gpt-4o-mini-2024-07-18",
                  temperature: float = 0.0,
                  chunk_size: int = 1000,
                  chunk_overlap: int = 200):
