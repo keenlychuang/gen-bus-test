@@ -83,6 +83,25 @@ def get_css():
             color: inherit !important;
             border-color: var(--border-color-primary) !important;
         }
+        
+        /* Citation styles */
+        sup {
+            font-size: 0.75em;
+            vertical-align: super;
+            line-height: 0;
+        }
+        
+        .sources-section {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color-primary);
+            font-size: 0.9em;
+        }
+        
+        .citation {
+            color: #4285F4;
+            font-weight: bold;
+        }
     </style>
     """
 
@@ -167,7 +186,7 @@ def process_uploaded_files(uploaded_files):
             st.error(f"Error processing documents: {str(e)}")
 
 # Main app layout
-st.title("DBUSE Chatbot for Document Base Q&A")
+st.title("🌙 DBUSE Chatbot for Document Base Q&A")
 st.markdown("""
 This chatbot uses Retrieval-Augmented Generation (RAG) to answer questions based on your documents.
 Upload Directories containing PDF, Word, or Excel files, then ask questions about their content.

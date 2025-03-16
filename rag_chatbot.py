@@ -1,5 +1,5 @@
 """
-RAG Chatbot Core Module
+RAG Chatbot Core Module with source citations
 Integrates document processing, vector database, and OpenAI API for question answering.
 """
 
@@ -70,9 +70,9 @@ class RAGChatbot:
         # Create the retriever
         self.retriever = None
         
-        # Define the QA prompt template
+        # Define the QA prompt template with citation instructions
         self.qa_prompt = PromptTemplate.from_template(
-            """You are an expert research assistant that answers questions based on the provided context.
+            """You are a expert research assistant that answers questions based on the provided context.
             
             Context:
             {context}
@@ -81,8 +81,23 @@ class RAGChatbot:
             {question}
             
             Answer the question based only on the provided context. If the context doesn't contain 
-            the information needed to answer the question, say "The documentation don't have enough information to 
-            answer this." and suggest what other information might be helpful.
+            the information needed to answer the question, say "I don't have enough information to 
+            answer this question." and suggest what other information might be helpful.
+            
+            Important: For each piece of information you use, include a citation to the source document 
+            using footnote notation [1], [2], etc. At the end of your answer, list all the source 
+            documents you cited with detailed information:
+
+            1. For PDF or Word documents, use the filename:
+               [1] filename.pdf
+               [2] another_document.docx
+            
+            2. For Excel files, include the sheet name and row information:
+               [3] spreadsheet.xlsx (Sheet: Sales, Rows: 10-35)
+               [4] data.xlsx (Sheet: Q2 Report)
+            
+            Use all available metadata to make the citation as specific as possible, including 
+            "sheet_name", "row_range", and other Excel-specific metadata when available.
             
             Answer:"""
         )
