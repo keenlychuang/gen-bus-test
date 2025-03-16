@@ -1,6 +1,6 @@
 """
 Streamlit UI for RAG Chatbot
-Provides a user-friendly interface with custom styling.
+Provides a user-friendly interface with clean, minimal styling.
 """
 
 import os
@@ -19,68 +19,69 @@ st.set_page_config(
 def get_css():
     return """
     <style>
-        /* Main background and text colors */
+        /* Remove hardcoded colors to respect theme */
         .stApp {
-            background-color: #F5F5DC; /* Beige background */
-            color: #000000; /* Black text */
+            color: var(--text-color);
         }
         
-        /* Sidebar styling */
-        .css-1d391kg, .css-12oz5g7 {
-            background-color: #D2B48C; /* Tan/taupe sidebar */
+        /* Fully transparent backgrounds to respect theme */
+        [data-testid="stSidebar"] {
+            background-color: transparent !important;
         }
         
         /* Chat message containers */
         .stChatMessage {
-            background-color: #FFF8DC; /* Cream color for messages */
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 10px;
             margin-bottom: 10px;
+            border: 1px solid var(--border-color-primary);
         }
         
         /* User messages */
         .stChatMessage[data-testid="user-message"] {
-            background-color: #E8DFD8; /* Light taupe for user messages */
+            background-color: rgba(66, 133, 244, 0.1);
         }
         
         /* Assistant messages */
         .stChatMessage[data-testid="assistant-message"] {
-            background-color: #F9F6F0; /* Lighter cream for assistant */
-        }
-        
-        /* Input fields */
-        .stTextInput input, .stFileUploader label {
-            background-color: #FFF8E7; /* Very light cream */
-            border: 1px solid #D2B48C; /* Taupe border */
+            background-color: rgba(240, 242, 246, 0.1);
         }
         
         /* Buttons */
         .stButton button {
-            background-color: #C8B39C; /* Muted taupe */
-            color: black;
+            background-color: #4285F4;
+            color: white;
             border: none;
         }
         
         .stButton button:hover {
-            background-color: #B49B7F; /* Darker taupe on hover */
+            background-color: #3367D6;
         }
         
-        /* Headers */
-        h1, h2, h3 {
-            color: #6D5B4B; /* Dark taupe for headers */
+        /* Headers - inherit from theme */
+        h1, h2, h3, p, label, div {
+            color: inherit;
         }
         
-        /* Code blocks with syntax highlighting */
-        code {
-            background-color: #F2EBE3; /* Light beige for code */
-            border: 1px solid #E0D5C5; /* Subtle border */
+        /* Code blocks */
+        code, pre {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color-primary);
         }
         
-        pre {
-            background-color: #F2EBE3; /* Light beige for code blocks */
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #E0D5C5;
+        /* Fix file uploader text color */
+        .stFileUploader label {
+            color: inherit !important;
+        }
+        
+        /* Input fields - transparent background to respect theme */
+        .stTextInput input, 
+        .stFileUploader, 
+        .stSelectbox, 
+        [data-baseweb="input"] {
+            background-color: transparent !important;
+            color: inherit !important;
+            border-color: var(--border-color-primary) !important;
         }
     </style>
     """
@@ -88,8 +89,8 @@ def get_css():
 # HTML components
 def get_about_html():
     return """
-    <div style="background-color: #F7F3EB; padding: 15px; border-radius: 8px; border: 1px solid #D2B48C;">
-        <h3 style="color: #6D5B4B;">About</h3>
+    <div style="background-color: #F8F9FA; padding: 15px; border-radius: 6px; border: 1px solid #EAEAEA;">
+        <h3 style="color: #333333;">About</h3>
         <p>This RAG Chatbot uses:</p>
         <ul>
             <li>LangChain for document processing</li>
@@ -101,16 +102,16 @@ def get_about_html():
 
 def get_chat_header_html():
     return """
-    <div style="background-color: #F7F3EB; padding: 20px; border-radius: 10px; border: 1px solid #D2B48C;">
-        <h2 style="color: #6D5B4B;">Chat with your Documents</h2>
+    <div style="background-color: #F8F9FA; padding: 15px; border-radius: 6px; border: 1px solid #EAEAEA;">
+        <h2 style="color: #333333;">Chat with your Documents</h2>
     </div>
     """
 
 def get_config_header_html():
-    return '<h3 style="color: #6D5B4B;">Configuration</h3>'
+    return '<h3>Configuration</h3>'
 
 def get_upload_header_html():
-    return '<h3 style="color: #6D5B4B;">Upload Documents</h3>'
+    return '<h3>Upload Documents</h3>'
 
 # Initialize session state variables
 if "messages" not in st.session_state:
@@ -174,7 +175,6 @@ Upload PDF, Word, or Excel files, then ask questions about their content.
 
 # Custom container for chat area
 chat_container = st.container()
-chat_container.markdown(get_chat_header_html(), unsafe_allow_html=True)
 
 # Sidebar for API key and file upload
 with st.sidebar:
@@ -212,8 +212,6 @@ with st.sidebar:
         if process_button:
             process_uploaded_files(uploaded_files)
     
-    st.divider()
-    
     # Clear documents button
     if st.session_state.documents_loaded:
         if st.button("Clear Documents"):
@@ -222,17 +220,10 @@ with st.sidebar:
                 st.session_state.documents_loaded = False
                 st.success("All documents have been cleared.")
     
-    st.divider()
-    
     # Clear chat button
     if st.button("Clear Chat History"):
         st.session_state.messages = []
         st.success("Chat history cleared.")
-    
-    st.divider()
-    
-    # App info
-    st.markdown(get_about_html(), unsafe_allow_html=True)
 
 # Display chat messages
 for message in st.session_state.messages:
