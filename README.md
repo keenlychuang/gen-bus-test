@@ -1,7 +1,5 @@
 # RAG Chatbot for Document Processing
 
-Manus one-shot generated repository for RAG document processing
-
 A lightweight Retrieval-Augmented Generation (RAG) chatbot for processing and querying Word documents, Excel files, and PDFs using Python 3.9, OpenAI API, LangChain, and Chroma.
 
 ## Overview
