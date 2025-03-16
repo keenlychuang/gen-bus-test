@@ -1,6 +1,8 @@
-# RAG Chatbot for Document Processing
+<div align="center">
+  <img src="dbuse-banner.svg" width="80%" alt="DBUSE RAG Chatbot">
+</div>
 
-Manus one-shot generated repository for RAG document processing
+# Document Base Unified Search and Extraction (DBUSE)
 
 A lightweight Retrieval-Augmented Generation (RAG) chatbot for processing and querying Word documents, Excel files, and PDFs using Python 3.9, OpenAI API, LangChain, and Chroma.
 
@@ -156,7 +158,7 @@ print(answer)
 
 ## Project Structure
 
-```
+```bash
 rag_chatbot/
 ├── utils/
 │   ├── __init__.py

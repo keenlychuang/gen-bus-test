@@ -4,6 +4,7 @@ Handles extraction of text from Word documents, Excel files, and PDFs using Lang
 """
 
 import os
+import pandas as pd
 from typing import List, Dict, Any, Optional
 
 # LangChain components
@@ -115,10 +116,90 @@ class DocumentProcessor:
         loader = Docx2txtLoader(file_path)
         return loader.load()
     
-    def _load_excel(self, file_path: str) -> List[Document]:
-        """Load an Excel file using LangChain's UnstructuredExcelLoader."""
-        loader = UnstructuredExcelLoader(file_path, mode="elements")
-        return loader.load()
+    def _load_excel(self, file_path: str, header_row: int = 0) -> List[Document]:
+        """
+        Load an Excel file preserving headers and sheet structure.
+        Uses pandas to maintain the tabular data structure and headers.
+        
+        Args:
+            file_path: Path to the Excel file
+            header_row: Row index (0-based) containing the column headers (default: 0)
+            
+        Returns:
+            List of Document objects with properly formatted Excel content
+        """
+        import pandas as pd
+        from langchain_core.documents import Document
+        
+        documents = []
+        
+        # Read all sheets in the Excel file
+        excel_file = pd.ExcelFile(file_path)
+        sheet_names = excel_file.sheet_names
+        
+        for sheet_name in sheet_names:
+            # Read the sheet into a pandas DataFrame with specified header row
+            df = pd.read_excel(file_path, sheet_name=sheet_name, header=header_row)
+            
+            # Skip empty sheets
+            if df.empty:
+                continue
+            
+            # Format the DataFrame as text with headers
+            formatted_text = f"# Sheet: {sheet_name}\n\n"
+            
+            # Add column headers as a section
+            formatted_text += "## Headers\n"
+            formatted_text += ", ".join(df.columns.astype(str)) + "\n\n"
+            
+            # Format the data with row indices and header references
+            formatted_text += "## Data\n"
+            
+            # Convert DataFrame to string representation with clear header alignment
+            # Use to_string() for better formatting of tabular data
+            table_str = df.to_string(index=False)
+            formatted_text += table_str + "\n\n"
+            
+            # Create document with metadata for this sheet
+            doc = Document(
+                page_content=formatted_text,
+                metadata={
+                    "source": file_path,
+                    "file_type": "excel",
+                    "sheet_name": sheet_name,
+                    "row_count": len(df),
+                    "column_count": len(df.columns)
+                }
+            )
+            documents.append(doc)
+            
+            # For large sheets, create additional documents with specific data subsets
+            # to improve retrieval granularity
+            if len(df) > 50:  # Only for larger sheets
+                # Process the sheet in smaller chunks with column headers
+                chunk_size = 25  # rows per chunk
+                for i in range(0, len(df), chunk_size):
+                    chunk_df = df.iloc[i:i+chunk_size]
+                    chunk_text = f"# Sheet: {sheet_name} (Rows {i}-{i+len(chunk_df)-1})\n\n"
+                    chunk_text += "## Headers\n"
+                    chunk_text += ", ".join(df.columns.astype(str)) + "\n\n"
+                    chunk_text += "## Data\n"
+                    chunk_text += chunk_df.to_string(index=False) + "\n"
+                    
+                    chunk_doc = Document(
+                        page_content=chunk_text,
+                        metadata={
+                            "source": file_path,
+                            "file_type": "excel",
+                            "sheet_name": sheet_name,
+                            "row_range": f"{i}-{i+len(chunk_df)-1}",
+                            "row_count": len(chunk_df),
+                            "column_count": len(df.columns)
+                        }
+                    )
+                    documents.append(chunk_doc)
+        
+        return documents
     
     def _extract_text_from_documents(self, documents: List[Document]) -> str:
         """Extract text from a list of LangChain Document objects."""

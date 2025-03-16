@@ -29,8 +29,60 @@ This repository uses Git LFS (Large File Storage) to manage test datasets.
 
 ### Using Git LFS
 
-* pull the repository test data with the following
+* Pull the repository test data with:
 
     ```bash
     git lfs pull
     ```
+
+* Adding new files to Git LFS:
+
+    ```bash
+    # Track file patterns in LFS
+    git lfs track "*.pdf" "*.csv" "*.xlsx"
+    
+    # Make sure .gitattributes is committed
+    git add .gitattributes
+    
+    # Add and commit your large files normally
+    git add path/to/large/file.pdf
+    git commit -m "Add test dataset"
+    git push
+    ```
+
+* Updating LFS files:
+
+    ```bash
+    # Replace or modify LFS-tracked files as needed
+    # Then commit changes normally
+    git add path/to/updated/file.csv
+    git commit -m "Update test dataset with new values"
+    git push
+    ```
+
+* Checking LFS status:
+
+    ```bash
+    # See which files are tracked by LFS
+    git lfs ls-files
+    
+    # Check status of LFS objects
+    git lfs status
+    ```
+
+## Running Tests
+
+To test the components of the RAG Chatbot system, run the provided test scripts:
+
+```bash
+# Test document processor
+python test/test_document_processor.py
+
+# Test vector store
+python test/test_vector_store.py
+
+# Test RAG chatbot
+python test/test_rag_chatbot.py
+```
+
+Note: The vector store and RAG chatbot tests require an OpenAI API key to be set.

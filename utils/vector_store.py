@@ -13,12 +13,12 @@ from langchain_chroma import Chroma  # Changed from langchain_community.vectorst
 from langchain_core.documents import Document
 
 
+DEFAULT_RESULTS_NUM = 6
+
 class VectorStore:
     """
     A class for managing document embeddings using ChromaDB as the vector database.
     """
-
-    DEFAULT_RESULTS_NUM = 6
     
     def __init__(self, 
                  persist_directory: str = "./chroma_db",
