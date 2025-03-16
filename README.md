@@ -4,7 +4,10 @@
 
 # Document Base Unified Search and Extraction (DBUSE)
 
-A lightweight Retrieval-Augmented Generation (RAG) chatbot for processing and querying Word documents, Excel files, and PDFs using Python 3.9, OpenAI API, LangChain, and Chroma. Pronounced “DEH-byew-see”
+A lightweight Retrieval-Augmented Generation (RAG) chatbot for processing and querying Word documents, Excel files, and PDFs using Python 3.9, OpenAI API, LangChain, and Chroma. 
+
+* Pronunciation: “DEH-byew-see”
+* Alternative: "The Bus" 
 
 ## Overview
 
