@@ -10,8 +10,8 @@ from rag_chatbot import RAGChatbot
 
 # Set page configuration
 st.set_page_config(
-    page_title="RAG Chatbot",
-    page_icon="🤖",
+    page_title="DBUSE",
+    page_icon="🌙",
     layout="centered"
 )
 
@@ -167,10 +167,10 @@ def process_uploaded_files(uploaded_files):
             st.error(f"Error processing documents: {str(e)}")
 
 # Main app layout
-st.title("📚 RAG Chatbot for Document Q&A")
+st.title("DBUSE Chatbot for Document Base Q&A")
 st.markdown("""
 This chatbot uses Retrieval-Augmented Generation (RAG) to answer questions based on your documents.
-Upload PDF, Word, or Excel files, then ask questions about their content.
+Upload Directories containing PDF, Word, or Excel files, then ask questions about their content.
 """)
 
 # Custom container for chat area

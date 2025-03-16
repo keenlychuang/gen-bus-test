@@ -72,7 +72,7 @@ class RAGChatbot:
         
         # Define the QA prompt template
         self.qa_prompt = PromptTemplate.from_template(
-            """You are a helpful assistant that answers questions based on the provided context.
+            """You are an expert research assistant that answers questions based on the provided context.
             
             Context:
             {context}
@@ -81,8 +81,8 @@ class RAGChatbot:
             {question}
             
             Answer the question based only on the provided context. If the context doesn't contain 
-            the information needed to answer the question, say "I don't have enough information to 
-            answer this question." and suggest what other information might be helpful.
+            the information needed to answer the question, say "The documentation don't have enough information to 
+            answer this." and suggest what other information might be helpful.
             
             Answer:"""
         )
