@@ -46,7 +46,7 @@
   <text x="120" y="160" font-family="Didot, 'Bodoni MT', 'Times New Roman', serif" font-size="120" font-weight="bold" fill="white" text-anchor="start" style="letter-spacing: 10px; text-shadow: 0px 0px 15px rgba(255,255,255,0.3);">DBUSE</text>
   
   <!-- Subtitle -->
-  <text x="122" y="220" font-family="Didot, 'Bodoni MT', 'Times New Roman', serif" font-size="28" fill="rgba(255,255,255,0.8)" text-anchor="start" style="letter-spacing: 3px;">RAG Chatbot</text>
+  <text x="122" y="220" font-family="Didot, 'Bodoni MT', 'Times New Roman', serif" font-size="28" fill="rgba(255,255,255,0.8)" text-anchor="start" style="letter-spacing: 3px;">Another RAG Chatbot</text>
   
   <!-- Subtle decorative line under text -->
   <line x1="120" y1="240" x2="380" y2="240" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
