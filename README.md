@@ -25,11 +25,13 @@ This RAG chatbot system offers the following key features:
 
 - Vector database storage using Chroma for efficient similarity search
 
-- Integration with OpenAI API for high-quality question answering
+- Integration with OpenAI API endpoints for high-quality question answering
 
 - User-friendly Streamlit interface for document uploading and chatting
 
 - Comprehensive demo notebook for exploring the system's capabilities
+
+- Conversational context to allow a more natural style for information retrieval
 
 ## Architecture
 

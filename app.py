@@ -1,16 +1,16 @@
 """
-Streamlit UI for RAG Chatbot
-Provides a user-friendly interface with clean, minimal styling.
+Streamlit UI for RAG Chatbot with conversation history support
 """
 
 import os
 import tempfile
 import streamlit as st
+import asyncio
 from rag_chatbot import RAGChatbot
 
 # Set page configuration
 st.set_page_config(
-    page_title="DBUSE",
+    page_title="RAG Chatbot",
     page_icon="🌙",
     layout="centered"
 )
@@ -186,10 +186,10 @@ def process_uploaded_files(uploaded_files):
             st.error(f"Error processing documents: {str(e)}")
 
 # Main app layout
-st.title("🌙 DBUSE Chatbot for Document Base Q&A")
+st.title("📚 RAG Chatbot for Document Q&A")
 st.markdown("""
 This chatbot uses Retrieval-Augmented Generation (RAG) to answer questions based on your documents.
-Upload Directories containing PDF, Word, or Excel files, then ask questions about their content.
+Upload PDF, Word, or Excel files, then ask questions about their content.
 """)
 
 # Custom container for chat area
@@ -239,9 +239,11 @@ with st.sidebar:
                 st.session_state.documents_loaded = False
                 st.success("All documents have been cleared.")
     
-    # Clear chat button
+    # Clear chat history
     if st.button("Clear Chat History"):
         st.session_state.messages = []
+        if st.session_state.chatbot:
+            st.session_state.chatbot.clear_history()
         st.success("Chat history cleared.")
 
 # Display chat messages
@@ -267,7 +269,8 @@ if prompt := st.chat_input("Ask a question about your documents..."):
         else:
             with st.spinner("Thinking..."):
                 try:
-                    response = st.session_state.chatbot.ask(prompt)
+                    # Use sync version for Streamlit compatibility
+                    response = st.session_state.chatbot.ask_sync(prompt)
                 except Exception as e:
                     response = f"Error generating response: {str(e)}"
         

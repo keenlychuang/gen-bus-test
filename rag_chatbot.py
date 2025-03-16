@@ -1,17 +1,18 @@
 """
-RAG Chatbot Core Module with source citations
+RAG Chatbot Core Module with conversation history
 Integrates document processing, vector database, and OpenAI API for question answering.
 """
 
 import os
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 
 # LangChain components
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from langchain_core.messages import HumanMessage, AIMessage
 
 # Local modules
 from utils.document_processor import DocumentProcessor
@@ -70,17 +71,39 @@ class RAGChatbot:
         # Create the retriever
         self.retriever = None
         
-        # Define the QA prompt template with citation instructions
+        # Conversation history
+        self.conversation_history = []
+        
+        # Define the query rewriter for contextual questions
+        self.query_rewriter_prompt = ChatPromptTemplate.from_messages([
+            ("system", """You are a expert research assistant that rewrites ambiguous or contextual follow-up questions into standalone questions that can be understood without conversation history.
+            Use the conversation history to understand what the user is referring to, and rewrite their question to be self-contained.
+            If the question is already self-contained and clear, return it unchanged.
+            
+            Examples:
+            - "What is its capital?" → "What is the capital of France?" (if previous question was about France)
+            - "How many does it have?" → "How many provinces does Canada have?" (if previous question was about Canada)
+            - "When was it founded?" → "When was Microsoft founded?" (if previous question was about Microsoft)
+            - "Where is Mount Everest located?" → "Where is Mount Everest located?" (already clear, no change needed)
+            """),
+            MessagesPlaceholder(variable_name="history"),
+            ("human", "Rewrite this question to be a standalone question: {question}")
+        ])
+        
+        # Define the QA prompt template
         self.qa_prompt = PromptTemplate.from_template(
-            """You are a expert research assistant that answers questions based on the provided context.
+            """You are a expert research assistant that answers questions based on the provided context and conversation history.
             
             Context:
             {context}
             
+            Conversation History:
+            {history}
+            
             Question:
             {question}
             
-            Answer the question based only on the provided context. If the context doesn't contain 
+            Answer the question based on the provided context and conversation history. If the context doesn't contain 
             the information needed to answer the question, say "I don't have enough information to 
             answer this question." and suggest what other information might be helpful.
             
@@ -104,6 +127,7 @@ class RAGChatbot:
         
         # Initialize the QA chain
         self.qa_chain = None
+        self.rewriter_chain = None
     
     def load_documents(self, file_paths: List[str] = None, directory_path: str = None):
         """
@@ -172,15 +196,74 @@ class RAGChatbot:
         """
         Create the question-answering chain using LangChain.
         """
+        # Create the query rewriter chain
+        self.rewriter_chain = (
+            self.query_rewriter_prompt | self.llm | StrOutputParser()
+        )
+        
         # Define the RAG pipeline
         self.qa_chain = (
-            {"context": self.retriever, "question": RunnablePassthrough()}
+            {
+                "context": self.retriever,
+                "question": RunnablePassthrough(),
+                "history": lambda _: self._format_history_for_prompt()
+            }
             | self.qa_prompt
             | self.llm
             | StrOutputParser()
         )
     
-    def ask(self, question: str) -> str:
+    def _format_history_for_prompt(self) -> str:
+        """Format conversation history for inclusion in the prompt."""
+        if not self.conversation_history:
+            return "No previous conversation."
+            
+        formatted_history = ""
+        for i, (question, answer) in enumerate(self.conversation_history):
+            formatted_history += f"Question {i+1}: {question}\n"
+            formatted_history += f"Answer {i+1}: {answer}\n\n"
+        
+        # Limit the history length to avoid exceeding context limits
+        # Take only the most recent 3 exchanges if history is long
+        if len(self.conversation_history) > 3:
+            recent_history = self.conversation_history[-3:]
+            formatted_history = "...\n"
+            for i, (question, answer) in enumerate(recent_history):
+                idx = len(self.conversation_history) - 3 + i + 1
+                formatted_history += f"Question {idx}: {question}\n"
+                formatted_history += f"Answer {idx}: {answer}\n\n"
+        
+        return formatted_history.strip()
+    
+    def _convert_to_langchain_messages(self) -> List:
+        """Convert conversation history to LangChain message format for the rewriter."""
+        messages = []
+        for question, answer in self.conversation_history:
+            messages.append(HumanMessage(content=question))
+            messages.append(AIMessage(content=answer))
+        return messages
+    
+    async def _rewrite_question(self, question: str) -> str:
+        """Rewrite contextual questions to standalone questions using conversation history."""
+        if not self.conversation_history:
+            return question  # No history to use for rewriting
+        
+        try:
+            history_messages = self._convert_to_langchain_messages()
+            rewritten_question = self.rewriter_chain.invoke({
+                "history": history_messages,
+                "question": question
+            })
+            
+            print(f"Original question: {question}")
+            print(f"Rewritten question: {rewritten_question}")
+            
+            return rewritten_question
+        except Exception as e:
+            print(f"Error rewriting question: {str(e)}")
+            return question  # Fall back to original question
+    
+    async def ask(self, question: str) -> str:
         """
         Ask a question and get an answer based on the loaded documents.
         
@@ -194,11 +277,32 @@ class RAGChatbot:
             return "Please load documents first using the load_documents method."
         
         try:
+            # Rewrite the question if it's a contextual follow-up
+            rewritten_question = await self._rewrite_question(question)
+            
             # Get answer using the QA chain
-            answer = self.qa_chain.invoke(question)
+            answer = self.qa_chain.invoke(rewritten_question)
+            
+            # Add to conversation history
+            self.conversation_history.append((question, answer))
+            
             return answer
         except Exception as e:
             return f"Error generating answer: {str(e)}"
+    
+    # For compatibility with synchronous code, provide a non-async version
+    def ask_sync(self, question: str) -> str:
+        """
+        Synchronous version of ask method for compatibility.
+        """
+        import asyncio
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(self.ask(question))
+        finally:
+            loop.close()
     
     def clear_documents(self):
         """
@@ -208,6 +312,13 @@ class RAGChatbot:
         self.retriever = None
         self.qa_chain = None
         print("All documents have been cleared from the vector store")
+    
+    def clear_history(self):
+        """
+        Clear conversation history.
+        """
+        self.conversation_history = []
+        print("Conversation history has been cleared")
 
 
 # Example usage
@@ -221,8 +332,11 @@ if __name__ == "__main__":
     # Load documents
     chatbot.load_documents(file_paths=["path/to/document.pdf"])
     
-    # Ask a question
-    question = "What is the main topic of the document?"
-    answer = chatbot.ask(question)
-    print(f"Question: {question}")
-    print(f"Answer: {answer}")
+    # Ask questions
+    answer1 = chatbot.ask_sync("What is the main topic of the document?")
+    print(f"Question: What is the main topic of the document?")
+    print(f"Answer: {answer1}")
+    
+    answer2 = chatbot.ask_sync("Can you tell me more about it?")
+    print(f"Question: Can you tell me more about it?")
+    print(f"Answer: {answer2}")
