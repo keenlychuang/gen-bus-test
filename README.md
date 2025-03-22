@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="dbuse-banner.svg" width="80%" alt="DBUSE RAG Chatbot">
+  <img src="images/dbuse-banner.svg" width="80%" alt="DBUSE RAG Chatbot">
 </div>
 
 # Document Base Unified Search and Extraction (DBUSE)

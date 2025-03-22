@@ -21,6 +21,7 @@ from langchain_core.callbacks import BaseCallbackHandler
 from utils.document_processor import DocumentProcessor
 from utils.vector_store import VectorStore
 from utils.prompt_loader import load_prompt
+from utils.query_processor import process_query
 
 class StreamingCallbackHandler(BaseCallbackHandler):
     """Callback handler for streaming LLM responses."""
@@ -213,25 +214,35 @@ class RAGChatbot:
             messages.append(AIMessage(content=answer))
         return messages
     
+    # Modify your _rewrite_question method to incorporate keyword processing:
     async def _rewrite_question(self, question: str) -> str:
         """Rewrite contextual questions to standalone questions using conversation history."""
         if not self.conversation_history:
-            return question  # No history to use for rewriting
-        
+            # No need for contextual processing when there's no history
+            return question
+
         try:
+            # First, use existing conversation context handling
             history_messages = self._convert_to_langchain_messages()
             rewritten_question = self.rewriter_chain.invoke({
                 "history": history_messages,
                 "question": question
             })
             
+            # Now enhance with keyword processing
+            processed = process_query(rewritten_question)
+            
             print(f"Original question: {question}")
             print(f"Rewritten question: {rewritten_question}")
+            print(f"Query type: {processed['query_type']}")
+            print(f"Keywords: {processed['keywords']}")
             
+            # For now, still return the rewritten question
+            # We'll use the variations in the retrieval step
             return rewritten_question
         except Exception as e:
-            print(f"Error rewriting question: {str(e)}")
-            return question  # Fall back to original question
+            print(f"Error processing question: {str(e)}")
+            return question
     
     async def ask(self, question: str, streaming=False):
         """
@@ -250,6 +261,14 @@ class RAGChatbot:
         try:
             # Rewrite the question if it's a contextual follow-up
             rewritten_question = await self._rewrite_question(question)
+
+            # Process the rewritten query to get variations
+            processed = process_query(rewritten_question)
+            
+            # Get documents using the original query and enhanced keywords
+            # This is where we'll later implement the hybrid approach
+            # For now, just use the keyword-enriched query if available
+            search_query = processed["variations"][1] if len(processed["variations"]) > 1 else rewritten_question
             
             if streaming:
                 # Create the callback handler for streaming

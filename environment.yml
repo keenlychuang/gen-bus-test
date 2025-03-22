@@ -5,39 +5,37 @@ channels:
 dependencies:
   - python=3.9
   - pip=22.3.1
-  - pip:
-    # Core libraries
-    - openai
-    - langchain>=0.1.0
-    - langchain-openai
-    - langchain-community
-    - langchain-text-splitters
-    - langchain-core
-    - langchain-chroma  
-    
-    # Vector database
-    - chromadb>=0.4.18
-    
-    # UI
-    - streamlit
-    
-    # Document processing - Word
-    - docx2txt
-    
-    # Document processing - PDF
-    - pypdf
-    - pdfminer.six
-    
-    # Document processing - Excel
-    - openpyxl
-    - xlrd
-    - pandas
-    
-    # Document processing - Unstructured
-    - unstructured[all]
-    - unstructured-inference
-    - networkx
-    
-    # Development
-    - jupyter
-    - notebook
+  - openai
+  - langchain>=0.1.0
+  - langchain-openai
+  - langchain-community
+  - langchain-text-splitters
+  - langchain-core
+  - langchain-chroma  
+  - spacy>=3.4.0
+  
+  # Vector database
+  - chromadb>=0.4.18
+  
+  # UI
+  - streamlit
+  
+  # Document processing - Word
+  - docx2txt
+  
+  # Document processing - PDF
+  - pypdf
+  - pdfminer.six
+  
+  # Document processing - Excel
+  - openpyxl
+  - xlrd
+  - pandas
+  
+  # Document processing - Unstructured
+  - unstructured[all]
+  - networkx
+  
+  # Development
+  - jupyter
+  - notebook
