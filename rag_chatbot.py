@@ -4,6 +4,7 @@ Integrates document processing, vector database, and OpenAI API for question ans
 """
 
 import os
+import time 
 from typing import List, Dict, Any, Optional, Tuple
 
 # LangChain components
@@ -23,13 +24,15 @@ from utils.vector_store import VectorStore
 class StreamingCallbackHandler(BaseCallbackHandler):
     """Callback handler for streaming LLM responses."""
     
-    def __init__(self, streaming_callback):
-        self.streaming_callback = streaming_callback
-    
+    def __init__(self):
+        self.text = ""
+        
     def on_llm_new_token(self, token: str, **kwargs):
         """Run on new LLM token."""
-        if self.streaming_callback:
-            self.streaming_callback(token)
+        self.text += token
+        
+    def get_text(self):
+        return self.text
 
 class RAGChatbot:
     """
@@ -276,16 +279,16 @@ class RAGChatbot:
             print(f"Error rewriting question: {str(e)}")
             return question  # Fall back to original question
     
-    async def ask(self, question: str, streaming_callback=None):
+    async def ask(self, question: str, streaming=False):
         """
         Ask a question and get an answer based on the loaded documents.
         
         Args:
             question: The question to ask
-            streaming_callback: Optional callback function for streaming responses
+            streaming: Whether to use streaming
             
         Returns:
-            Answer to the question
+            Answer to the question or tuple of (handler, async_generator) for streaming
         """
         if not self.retriever or not self.qa_chain:
             return "Please load documents first using the load_documents method."
@@ -294,27 +297,24 @@ class RAGChatbot:
             # Rewrite the question if it's a contextual follow-up
             rewritten_question = await self._rewrite_question(question)
             
-            # Handle streaming if callback is provided
-            if streaming_callback:
-                callback_handler = StreamingCallbackHandler(streaming_callback)
-                config = RunnableConfig(callbacks=[callback_handler])
-                
-                answer = ""
-                async for chunk in self.qa_chain.astream(rewritten_question, config=config):
-                    answer += chunk
+            if streaming:
+                # Create the callback handler for streaming
+                handler = StreamingCallbackHandler()
+                # Create config with the handler
+                config = RunnableConfig(callbacks=[handler])
+                # Return both the handler and the async generator
+                generator = self.qa_chain.astream(rewritten_question, config=config)
+                return handler, generator
             else:
-                # Get answer using the QA chain (non-streaming)
+                # Non-streaming path
                 answer = self.qa_chain.invoke(rewritten_question)
-            
-            # Add to conversation history
-            self.conversation_history.append((question, answer))
-            
-            return answer
+                # Add to conversation history
+                self.conversation_history.append((question, answer))
+                return answer
         except Exception as e:
             return f"Error generating answer: {str(e)}"
 
-    # Update the synchronous version as well
-    def ask_sync(self, question: str, streaming_callback=None):
+    def ask_sync(self, question: str, streaming=False):
         """
         Synchronous version of ask method for compatibility.
         """
@@ -323,7 +323,12 @@ class RAGChatbot:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            return loop.run_until_complete(self.ask(question, streaming_callback))
+            if streaming:
+                # Not easily doable synchronously
+                # Just use non-streaming version
+                return loop.run_until_complete(self.ask(question, streaming=False))
+            else:
+                return loop.run_until_complete(self.ask(question, streaming=False))
         finally:
             loop.close()
     

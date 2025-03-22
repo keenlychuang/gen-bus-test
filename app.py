@@ -3,9 +3,11 @@ Streamlit UI for RAG Chatbot with conversation history support
 """
 
 import os
+import time 
 import tempfile
 import streamlit as st
 from rag_chatbot import RAGChatbot
+
 
 # Set page configuration
 st.set_page_config(
@@ -264,7 +266,6 @@ with chat_container:
         with st.chat_message(message["role"]):
             st.write(message["content"])
 
-# Chat input
 if prompt := st.chat_input("Ask a question about your documents..."):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -280,30 +281,28 @@ if prompt := st.chat_input("Ask a question about your documents..."):
         elif not st.session_state.documents_loaded:
             response = "Please upload and process documents before asking questions."
         else:
-            # Initialize an empty container for streaming
+            # Initialize placeholder for the response
             message_placeholder = st.empty()
-            full_response = ""
-            
-            # Define callback function for streaming
-            def streaming_callback(chunk):
-                nonlocal full_response
-                full_response += chunk
-                message_placeholder.markdown(full_response + "▌")
             
             try:
-                # Use streaming version
-                full_response = st.session_state.chatbot.ask_sync(
-                    prompt, 
-                    streaming_callback=streaming_callback
-                )
-                # Final update without the cursor
+                # Simulate streaming in a Streamlit-friendly way
+                # First, get the complete response
+                with st.spinner("Thinking..."):
+                    full_response = st.session_state.chatbot.ask_sync(prompt)
+                
+                # Then display it character by character to simulate streaming
+                displayed_response = ""
+                for char in full_response:
+                    displayed_response += char
+                    message_placeholder.markdown(displayed_response + "▌")
+                    time.sleep(0.005)  # Small delay for streaming effect
+                
+                # Final display without cursor
                 message_placeholder.markdown(full_response)
+                response = full_response
             except Exception as e:
-                full_response = f"Error generating response: {str(e)}"
-                message_placeholder.markdown(full_response)
-            
-            # Set the final response
-            response = full_response
+                response = f"Error generating response: {str(e)}"
+                message_placeholder.markdown(response)
         
     # Add assistant response to chat history
     st.session_state.messages.append({"role": "assistant", "content": response})
