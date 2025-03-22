@@ -20,6 +20,7 @@ from langchain_core.callbacks import BaseCallbackHandler
 # Local modules
 from utils.document_processor import DocumentProcessor
 from utils.vector_store import VectorStore
+from utils.prompt_loader import load_prompt
 
 class StreamingCallbackHandler(BaseCallbackHandler):
     """Callback handler for streaming LLM responses."""
@@ -90,56 +91,9 @@ class RAGChatbot:
         # Conversation history
         self.conversation_history = []
         
-        # Define the query rewriter for contextual questions
-        self.query_rewriter_prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a expert research assistant that rewrites ambiguous or contextual follow-up questions into standalone questions that can be understood without conversation history.
-            Use the conversation history to understand what the user is referring to, and rewrite their question to be self-contained.
-            If the question is already self-contained and clear, return it unchanged.
-            
-            Examples:
-            - "What is its capital?" → "What is the capital of France?" (if previous question was about France)
-            - "How many does it have?" → "How many provinces does Canada have?" (if previous question was about Canada)
-            - "When was it founded?" → "When was Microsoft founded?" (if previous question was about Microsoft)
-            - "Where is Mount Everest located?" → "Where is Mount Everest located?" (already clear, no change needed)
-            """),
-            MessagesPlaceholder(variable_name="history"),
-            ("human", "Rewrite this question to be a standalone question: {question}")
-        ])
-        
-        # Define the QA prompt template
-        self.qa_prompt = PromptTemplate.from_template(
-            """You are a expert research assistant that answers questions based on the provided context and conversation history.
-            
-            Context:
-            {context}
-            
-            Conversation History:
-            {history}
-            
-            Question:
-            {question}
-            
-            Answer the question based on the provided context and conversation history. If the context doesn't contain 
-            the information needed to answer the question, say "I don't have enough information to 
-            answer this question." and suggest what other information might be helpful.
-            
-            Important: For each piece of information you use, include a citation to the source document 
-            using footnote notation [1], [2], etc. At the end of your answer, list all the source 
-            documents you cited with detailed information:
-
-            1. For PDF or Word documents, use the filename:
-               [1] filename.pdf
-               [2] another_document.docx
-            
-            2. For Excel files, include the sheet name and row information:
-               [3] spreadsheet.xlsx (Sheet: Sales, Rows: 10-35)
-               [4] data.xlsx (Sheet: Q2 Report)
-            
-            Use all available metadata to make the citation as specific as possible, including 
-            "sheet_name", "row_range", and other Excel-specific metadata when available.
-            
-            Answer:"""
-        )
+        # Load prompts from yaml
+        self.query_rewriter_prompt = load_prompt("query_rewriter")
+        self.qa_prompt = load_prompt("qa_system")
         
         # Initialize the QA chain
         self.qa_chain = None
