@@ -13,11 +13,23 @@ from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesP
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.runnables import RunnableConfig
+from langchain_core.callbacks import BaseCallbackHandler
 
 # Local modules
 from utils.document_processor import DocumentProcessor
 from utils.vector_store import VectorStore
 
+class StreamingCallbackHandler(BaseCallbackHandler):
+    """Callback handler for streaming LLM responses."""
+    
+    def __init__(self, streaming_callback):
+        self.streaming_callback = streaming_callback
+    
+    def on_llm_new_token(self, token: str, **kwargs):
+        """Run on new LLM token."""
+        if self.streaming_callback:
+            self.streaming_callback(token)
 
 class RAGChatbot:
     """
@@ -61,11 +73,12 @@ class RAGChatbot:
             openai_api_key=self.openai_api_key
         )
         
-        # Initialize OpenAI chat model
+        # Initialize OpenAI chat model with streaming enabled
         self.llm = ChatOpenAI(
             model_name=model_name,
             temperature=temperature,
-            openai_api_key=self.openai_api_key
+            openai_api_key=self.openai_api_key,
+            streaming=True  # Enable streaming
         )
         
         # Create the retriever
@@ -194,14 +207,14 @@ class RAGChatbot:
     
     def _create_qa_chain(self):
         """
-        Create the question-answering chain using LangChain.
+        Create the question-answering chain using LangChain with streaming support.
         """
         # Create the query rewriter chain
         self.rewriter_chain = (
             self.query_rewriter_prompt | self.llm | StrOutputParser()
         )
         
-        # Define the RAG pipeline
+        # Define the RAG pipeline with streaming support
         self.qa_chain = (
             {
                 "context": self.retriever,
@@ -263,12 +276,13 @@ class RAGChatbot:
             print(f"Error rewriting question: {str(e)}")
             return question  # Fall back to original question
     
-    async def ask(self, question: str) -> str:
+    async def ask(self, question: str, streaming_callback=None):
         """
         Ask a question and get an answer based on the loaded documents.
         
         Args:
             question: The question to ask
+            streaming_callback: Optional callback function for streaming responses
             
         Returns:
             Answer to the question
@@ -280,8 +294,17 @@ class RAGChatbot:
             # Rewrite the question if it's a contextual follow-up
             rewritten_question = await self._rewrite_question(question)
             
-            # Get answer using the QA chain
-            answer = self.qa_chain.invoke(rewritten_question)
+            # Handle streaming if callback is provided
+            if streaming_callback:
+                callback_handler = StreamingCallbackHandler(streaming_callback)
+                config = RunnableConfig(callbacks=[callback_handler])
+                
+                answer = ""
+                async for chunk in self.qa_chain.astream(rewritten_question, config=config):
+                    answer += chunk
+            else:
+                # Get answer using the QA chain (non-streaming)
+                answer = self.qa_chain.invoke(rewritten_question)
             
             # Add to conversation history
             self.conversation_history.append((question, answer))
@@ -289,9 +312,9 @@ class RAGChatbot:
             return answer
         except Exception as e:
             return f"Error generating answer: {str(e)}"
-    
-    # For compatibility with synchronous code, provide a non-async version
-    def ask_sync(self, question: str) -> str:
+
+    # Update the synchronous version as well
+    def ask_sync(self, question: str, streaming_callback=None):
         """
         Synchronous version of ask method for compatibility.
         """
@@ -300,7 +323,7 @@ class RAGChatbot:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            return loop.run_until_complete(self.ask(question))
+            return loop.run_until_complete(self.ask(question, streaming_callback))
         finally:
             loop.close()
     

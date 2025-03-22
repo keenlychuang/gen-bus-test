@@ -5,7 +5,6 @@ Streamlit UI for RAG Chatbot with conversation history support
 import os
 import tempfile
 import streamlit as st
-import asyncio
 from rag_chatbot import RAGChatbot
 
 # Set page configuration
@@ -185,15 +184,27 @@ def process_uploaded_files(uploaded_files):
         except Exception as e:
             st.error(f"Error processing documents: {str(e)}")
 
+# Function to handle asking questions
+def ask_question(question):
+    if not st.session_state.chatbot:
+        return "Please initialize the chatbot with your OpenAI API key first."
+    elif not st.session_state.documents_loaded:
+        return "Please upload and process documents before asking questions."
+    else:
+        try:
+            # Use the synchronous version for Streamlit compatibility
+            # The internal context handling will be hidden from the UI
+            answer = st.session_state.chatbot.ask_sync(question)
+            return answer
+        except Exception as e:
+            return f"Error generating response: {str(e)}"
+
 # Main app layout
 st.title("🌙 DBUSE RAG Chatbot for Document Q&A")
 st.markdown("""
 This chatbot uses Retrieval-Augmented Generation (RAG) to answer questions based on your documents.
 Upload PDF, Word, or Excel files, then ask questions about their content.
 """)
-
-# Custom container for chat area
-chat_container = st.container()
 
 # Sidebar for API key and file upload
 with st.sidebar:
@@ -246,10 +257,12 @@ with st.sidebar:
             st.session_state.chatbot.clear_history()
         st.success("Chat history cleared.")
 
-# Display chat messages
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
+# Display chat messages from session state
+chat_container = st.container()
+with chat_container:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
 
 # Chat input
 if prompt := st.chat_input("Ask a question about your documents..."):
@@ -267,23 +280,34 @@ if prompt := st.chat_input("Ask a question about your documents..."):
         elif not st.session_state.documents_loaded:
             response = "Please upload and process documents before asking questions."
         else:
-            with st.spinner("Thinking..."):
-                try:
-                    # Use sync version for Streamlit compatibility
-                    response = st.session_state.chatbot.ask_sync(prompt)
-                except Exception as e:
-                    response = f"Error generating response: {str(e)}"
+            # Initialize an empty container for streaming
+            message_placeholder = st.empty()
+            full_response = ""
+            
+            # Define callback function for streaming
+            def streaming_callback(chunk):
+                nonlocal full_response
+                full_response += chunk
+                message_placeholder.markdown(full_response + "▌")
+            
+            try:
+                # Use streaming version
+                full_response = st.session_state.chatbot.ask_sync(
+                    prompt, 
+                    streaming_callback=streaming_callback
+                )
+                # Final update without the cursor
+                message_placeholder.markdown(full_response)
+            except Exception as e:
+                full_response = f"Error generating response: {str(e)}"
+                message_placeholder.markdown(full_response)
+            
+            # Set the final response
+            response = full_response
         
-        st.write(response)
-    
     # Add assistant response to chat history
     st.session_state.messages.append({"role": "assistant", "content": response})
 
 # Instructions if no documents loaded
 if not st.session_state.documents_loaded:
     st.info("👈 Please initialize the chatbot and upload documents to get started.")
-
-# Run the Streamlit app
-if __name__ == "__main__":
-    # This is handled by Streamlit's execution model
-    pass
